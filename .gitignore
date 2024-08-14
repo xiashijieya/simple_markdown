@@ -1,0 +1,12 @@
+# CMake 构建目录
+build/
+build_debug/
+build_release/
+
+# 编译产物
+*.o
+*.obj
+*.exe
+
+# 本地学习教程（仅本地保留，不纳入 git 跟踪）
+tutorial.md
