@@ -3,13 +3,18 @@
 
 #include "test_framework.h"
 #include "ast.h"
+#include "inline_ast.h"
 #include "lexer.h"
 #include "markdown_parser.h"
 #include "parser.h"
 
-// 阶段三验收标准：parse_blocks 把“带类型的行”组装成正确的 AST。
-// 查看节点的具体内容时，需要用 dynamic_cast 把基类指针转成子类，
-// 失败会返回 nullptr —— 这也是“多态 + 向下转型”的标准用法。
+
+static std::string sole_text(const std::vector<InlinePtr>& inlines) {
+    CHECK_EQ(inlines.size(), static_cast<size_t>(1));
+    const TextNode* t = dynamic_cast<const TextNode*>(inlines[0].get());
+    CHECK(t != 0);
+    return t->text();
+}
 
 static void test_heading_and_hr() {
     const std::vector<LineInfo> lines = tokenize("# Title\n\n---\n");
@@ -21,7 +26,7 @@ static void test_heading_and_hr() {
     const HeadingNode* h = dynamic_cast<const HeadingNode*>(doc[0].get());
     CHECK(h != 0);
     CHECK_EQ(h->level(), 1);
-    CHECK_EQ(h->text(), std::string("Title"));
+    CHECK_EQ(sole_text(h->inlines()), std::string("Title"));
 
     CHECK(doc[1]->type() == BlockType::HorizontalRule);
 }
@@ -34,7 +39,7 @@ static void test_paragraph_joins_lines() {
     CHECK_EQ(doc.size(), static_cast<size_t>(1));
     const ParagraphNode* p = dynamic_cast<const ParagraphNode*>(doc[0].get());
     CHECK(p != 0);
-    CHECK_EQ(p->text(), std::string("hello world"));
+    CHECK_EQ(sole_text(p->inlines()), std::string("hello world"));
 }
 
 static void test_paragraph_separated_by_blank() {
@@ -57,6 +62,7 @@ static void test_code_block_basic() {
     CHECK(code != 0);
     CHECK_EQ(code->language(), std::string("c++"));
     // 块内必须保留原文：# 没有被剥掉，两行用 '\n' 连接
+    // （代码块是纯文本节点，不经过行内解析）
     CHECK_EQ(code->content(), std::string("int x = 1;\n# not a heading"));
 }
 
@@ -82,8 +88,8 @@ static void test_unordered_list() {
     CHECK(list != 0);
     CHECK(!list->ordered());
     CHECK_EQ(list->items().size(), static_cast<size_t>(3));
-    CHECK_EQ(list->items()[0], std::string("a"));
-    CHECK_EQ(list->items()[2], std::string("c"));
+    CHECK_EQ(sole_text(list->items()[0]), std::string("a"));
+    CHECK_EQ(sole_text(list->items()[2]), std::string("c"));
 }
 
 static void test_ordered_list_and_mixed_types_split() {
@@ -111,7 +117,7 @@ static void test_blockquote_example() {
     CHECK_EQ(doc.size(), static_cast<size_t>(1));
     const BlockquoteNode* q = dynamic_cast<const BlockquoteNode*>(doc[0].get());
     CHECK(q != 0);
-    CHECK_EQ(q->text(), std::string("line1\nline2"));
+    CHECK_EQ(sole_text(q->inlines()), std::string("line1\nline2"));
 }
 
 static void test_full_document_order() {

@@ -2,9 +2,11 @@
 
 #include <cstddef>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "ast.h"
+#include "inline_parser.h"
 #include "line.h"
 
 namespace {
@@ -26,6 +28,7 @@ BlockPtr parse_code_block(const std::vector<LineInfo>& lines, size_t& pos) {
     if (pos < lines.size()) {
         ++pos;  // 消费结束围栏；若扫描到文件末尾（未闭合）则没有
     }
+    // 代码块内容不做行内解析，保持纯文本
     return BlockPtr(new CodeBlockNode(lang, content));
 }
 
@@ -37,21 +40,21 @@ BlockPtr parse_paragraph(const std::vector<LineInfo>& lines, size_t& pos) {
         text += lines[pos].content_;
         ++pos;
     }
-    return BlockPtr(new ParagraphNode(text));
+    return BlockPtr(new ParagraphNode(parse_inlines(text)));
 }
 
 BlockPtr parse_list(const std::vector<LineInfo>& lines, size_t& pos) {
     const bool ordered = (lines[pos].type_ == LineType::OrderedList);
     const LineType want = ordered ? LineType::OrderedList
                                   : LineType::UnorderedList;
-    std::vector<std::string> items;
-    items.push_back(lines[pos].content_);
+    std::vector<std::vector<InlinePtr>> items;
+    items.push_back(parse_inlines(lines[pos].content_));
     ++pos;
     while (pos < lines.size() && lines[pos].type_ == want) {
-        items.push_back(lines[pos].content_);
+        items.push_back(parse_inlines(lines[pos].content_));
         ++pos;
     }
-    return BlockPtr(new ListNode(ordered, items));
+    return BlockPtr(new ListNode(ordered, std::move(items)));
 }
 
 
@@ -63,7 +66,7 @@ BlockPtr parse_blockquote(const std::vector<LineInfo>& lines, size_t& pos) {
         text += lines[pos].content_;
         ++pos;
     }
-    return BlockPtr(new BlockquoteNode(text));
+    return BlockPtr(new BlockquoteNode(parse_inlines(text)));
 }
 
 }  // namespace
@@ -82,7 +85,7 @@ std::vector<BlockPtr> parse_blocks(const std::vector<LineInfo>& lines) {
                 continue;
 
             case LineType::Heading:
-                node.reset(new HeadingNode(line.level_, line.content_));
+                node.reset(new HeadingNode(line.level_, parse_inlines(line.content_)));
                 ++pos;
                 break;
 
