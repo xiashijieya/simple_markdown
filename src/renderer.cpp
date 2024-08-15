@@ -159,3 +159,29 @@ std::string render_html(const std::vector<BlockPtr>& blocks) {
     }
     return html;
 }
+
+std::string wrap_html_document(const std::string& body_html,
+                               const std::string& title,
+                               const std::string& css) {
+    std::string html;
+    html += "<!DOCTYPE html>\n";
+    html += "<html lang=\"zh-CN\">\n";
+    html += "<head>\n";
+    html += "<meta charset=\"UTF-8\">\n";
+    html += "<meta name=\"viewport\" content=\"width=device-width, "
+            "initial-scale=1.0\">\n";
+    html += "<title>" + escape_html(title) + "</title>\n";
+    if (!css.empty()) {
+        html += "<style>\n";
+        html += css;
+        html += "\n</style>\n";
+    }
+    html += "</head>\n";
+    html += "<body>\n";
+    html += "<div class=\"markdown-body\">\n";
+    html += body_html;
+    html += "</div>\n";
+    html += "</body>\n";
+    html += "</html>\n";
+    return html;
+}
