@@ -18,6 +18,7 @@ add_library(markdown_core STATIC
     src/lexer.cpp
     src/parser.cpp
     src/inline_parser.cpp
+    src/renderer.cpp
 )
 target_include_directories(markdown_core PUBLIC src)
 
