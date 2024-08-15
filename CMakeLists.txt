@@ -19,6 +19,7 @@ add_library(markdown_core STATIC
     src/parser.cpp
     src/inline_parser.cpp
     src/renderer.cpp
+    src/file_util.cpp
 )
 target_include_directories(markdown_core PUBLIC src)
 
