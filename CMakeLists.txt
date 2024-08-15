@@ -15,7 +15,8 @@ endif()
 
 add_library(markdown_core STATIC
     src/markdown_parser.cpp
-     src/lexer.cpp
+    src/lexer.cpp
+    src/parser.cpp
 )
 target_include_directories(markdown_core PUBLIC src)
 

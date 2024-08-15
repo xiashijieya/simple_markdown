@@ -139,21 +139,21 @@ LineInfo classify_line(const std::string& line) {
     std::string content;
     int level = 0;
     if (is_blank_text(line)) {
-        res = LineInfo(LineType::Blank, "", 0);
+        res = LineInfo(LineType::Blank, "", 0, line);
     } else if (is_heading_text(line, content, level)) {
-        res = LineInfo(LineType::Heading, content, level);
+        res = LineInfo(LineType::Heading, content, level, line);
     } else if (is_code_fence_text(line, content)) {
-        res = LineInfo(LineType::CodeFence, content, 0);
+        res = LineInfo(LineType::CodeFence, content, 0, line);
     } else if (is_horizontal_rule_text(line)) {
-        res = LineInfo(LineType::HorizontalRule, "", 0);
+        res = LineInfo(LineType::HorizontalRule, "", 0, line);
     } else if (is_block_quote_text(line, content)) {
-        res = LineInfo(LineType::Blockquote, content, 0);
+        res = LineInfo(LineType::Blockquote, content, 0, line);
     } else if (is_unordered_list_text(line, content)) {
-        res = LineInfo(LineType::UnorderedList, content, 0);
+        res = LineInfo(LineType::UnorderedList, content, 0, line);
     } else if (is_ordered_list_text(line, content)) {
-        res = LineInfo(LineType::OrderedList, content, 0);
+        res = LineInfo(LineType::OrderedList, content, 0, line);
     } else {
-        res = LineInfo(LineType::Text, line, 0);
+        res = LineInfo(LineType::Text, line, 0, line);
     }
     return res;
 }
